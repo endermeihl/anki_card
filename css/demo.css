@@ -1,0 +1,41 @@
+
+/* Demo CSS for Anki Cards */
+.ex-co { font-style: italic; color: #1687a0; }
+
+/* ============================================
+   Collocations 搭配差异样式
+   用于展示单词的不同搭配模式及其对应含义
+   ============================================ */
+
+/* 每个搭配项的容器 */
+.coll-item {
+  display: flex;          /* 横向排列 pattern → meaning */
+  align-items: baseline;  /* 文字基线对齐 */
+  margin: 3px 0;          /* 上下间距 */
+  padding: 3px 6px;       /* 内边距 */
+  background: #f8f9fa;    /* 浅灰背景 */
+  border-left: 3px solid #4a90d9;  /* 左侧蓝色边框 */
+  border-radius: 0 4px 4px 0;      /* 右侧圆角 */
+  font-size: 0.85em;      /* 缩小字体，相对于父元素 */
+}
+
+/* 搭配模式（如 "word + noun"） */
+.coll-item .pattern {
+  font-weight: 600;       /* 加粗 */
+  color: #2c5282;         /* 深蓝色 */
+  font-family: "Consolas", "Monaco", monospace;  /* 等宽字体 */
+  font-size: 0.9em;       /* 稍小一点 */
+}
+
+/* 箭头分隔符 */
+.coll-item .arrow {
+  margin: 0 6px;          /* 左右间距 */
+  color: #718096;         /* 灰色 */
+  font-size: 0.85em;
+}
+
+/* 中文含义 */
+.coll-item .meaning {
+  color: #2d3748;         /* 深灰色 */
+  font-size: 0.9em;       /* 稍小一点 */
+}
