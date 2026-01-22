@@ -57,7 +57,7 @@ def main() -> int:
     failed_words: List[str] = []
 
     for i, word in enumerate(words, 1):
-        print(f"  Processing [{i}/{len(words)}]: {word}...", end=" ")
+        print(f"  Processing [{i}/{len(words)}]: {word}...", end=" ", flush=True)
 
         data = generate_card_data(word)
 

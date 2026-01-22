@@ -1,175 +1,221 @@
+# Anki 卡片生成器 - 使用文档
 
-# anki卡片学习英语的功能
+## 快速开始
 
-根据你的最新需求，我们需要引入**多卡片模式**（即一个单词在练习库中会生成 3 张不同的卡片：完形、拼写、场景）。
+### 环境要求
 
+- Python 3.8 或更高版本
+- DeepSeek API 密钥
 
-### 一、 系统流程设计 (Workflow)
+### 安装步骤
 
-我们放弃“单文件+日志”模式，采用 **“Inbox (收件箱)”** 处理模式。
+1. **安装依赖**
 
-#### 1. 文件夹结构
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-你需要建立一个工作目录，结构如下：
+2. **配置 API 密钥**
 
-```text
-/Anki_Auto_Builder
-    /input          <-- 每天把今天的 txt 扔进去 (例如 day01.txt, words_20240121.txt)
-    /processed      <-- 处理完的文件会被移动到这里 (自动加上时间戳重命名)
-    /output         <-- 生成的 CSV 结果存放在这里
+   复制 `.env.example` 为 `.env`，并填入你的 DeepSeek API 密钥：
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   编辑 `.env` 文件：
+
+   ```
+   DEEPSEEK_API_KEY=你的API密钥
+   ```
+
+3. **准备单词文件**
+
+   将包含单词的 `.txt` 文件放入 `Anki_Auto_Builder/input/` 目录。
+
+   文件格式要求：
+   - 每行一个单词
+   - UTF-8 编码
+   - 支持多个文件同时处理
+
+   示例文件内容：
+   ```
+   combine
+   elaborate
+   demonstrate
+   implement
+   ```
+
+4. **运行程序**
+
+   ```bash
+   python main.py
+   ```
+
+## 输出说明
+
+### 输出文件位置
+
+程序运行后，会在 `Anki_Auto_Builder/output/` 目录生成两个 CSV 文件：
+
+- `learning_import.csv` - 学习卡片数据
+- `practice_import.csv` - 练习卡片数据
+
+### 学习卡片字段说明
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| Word | 单词 | combine |
+| Phonetic | 音标 | /kəmˈbaɪn/ |
+| Meaning | 中文释义 | v. 结合，联合；n. 联合企业 |
+| SourceCode | 词源分析 | com-(一起) + bine(绑) = 绑在一起 |
+| Assimilation | 记忆联想 | 联想：com(来) + bine(拜) = 来拜访后结合 |
+| Logic | 使用逻辑 | 强调将不同元素整合为一体 |
+| Note | 注意事项 | 区分 combine with 和 combine...and... |
+| Example_En | 英文例句 | We need to combine theory with practice. |
+| Example_Cn | 例句翻译 | 我们需要将理论与实践相结合。 |
+
+### 练习卡片字段说明
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| Word | 单词 | combine |
+| Meaning | 中文释义 | v. 结合，联合 |
+| Cloze_Text | 完形填空句 | We need to _____ our efforts to succeed. |
+| Cloze_Hint | 填空提示 | 联合，结合 |
+| Spell_Def | 拼写练习定义 | to join or merge together |
+| Scenario_Context | 情景描述 | 你正在参加团队会议讨论项目合作 |
+| Scenario_Question | 情景问题 | 如何表达"结合两个团队的资源"？ |
+
+## 导入 Anki
+
+### 准备工作
+
+在导入之前，需要在 Anki 中创建对应的笔记类型：
+
+#### 1. 创建学习卡片笔记类型
+
+笔记类型名称：`English_Deep_Learning`
+
+字段（按顺序）：
+1. Word
+2. Phonetic
+3. Meaning
+4. SourceCode
+5. Assimilation
+6. Logic
+7. Note
+8. Example_En
+9. Example_Cn
+
+#### 2. 创建练习卡片笔记类型
+
+笔记类型名称：`English_Practice_Master`
+
+字段（按顺序）：
+1. Word
+2. Meaning
+3. Cloze_Text
+4. Cloze_Hint
+5. Spell_Def
+6. Scenario_Context
+7. Scenario_Question
+
+建议创建 3 个卡片模板：
+- **完形填空卡片**：正面显示 Cloze_Text，背面显示 Word
+- **拼写练习卡片**：正面显示 Spell_Def，背面显示 Word
+- **情景问答卡片**：正面显示 Scenario_Context + Scenario_Question，背面显示 Word
+
+### 导入步骤
+
+1. 打开 Anki
+2. 点击 **文件** → **导入**
+3. 选择 `learning_import.csv` 或 `practice_import.csv`
+4. 设置导入选项：
+   - **类型**：选择对应的笔记类型
+   - **牌组**：选择目标牌组
+   - **字段分隔符**：逗号
+   - **允许在字段中使用HTML**：勾选（如果内容包含格式）
+5. 确认字段映射正确
+6. 点击 **导入**
+
+## 常见问题
+
+### Q: API 调用失败怎么办？
+
+程序会自动重试 3 次。如果仍然失败，该单词会被跳过并记录在最终报告中。你可以：
+1. 检查网络连接
+2. 确认 API 密钥是否正确
+3. 检查 API 账户余额
+4. 将失败的单词单独保存，稍后重试
+
+### Q: 如何处理大量单词？
+
+- 程序会逐个处理单词，显示进度
+- 建议每次处理不超过 100 个单词
+- 可以分批处理，每批生成的 CSV 会覆盖之前的文件
+
+### Q: 如何自定义 API 提示词？
+
+编辑 `api/deepseek.py` 文件中的 `SYSTEM_PROMPT` 和 `USER_PROMPT_TEMPLATE` 变量。
+
+### Q: 输出的 CSV 文件乱码？
+
+确保：
+1. 使用支持 UTF-8 的编辑器查看
+2. 导入 Anki 时选择 UTF-8 编码
+
+### Q: 如何添加新的卡片类型？
+
+1. 在 `generators/` 目录创建新的生成器类
+2. 在 `api/deepseek.py` 中扩展 API 响应格式
+3. 在 `main.py` 中集成新的生成器
+
+## 文件归档说明
+
+处理完成后，原始输入文件会被移动到 `Anki_Auto_Builder/processed/` 目录，并添加时间戳后缀。
+
+例如：
+- 原文件：`words.txt`
+- 归档后：`words_20240115_143022.txt`
+
+这样可以：
+- 避免重复处理同一文件
+- 保留处理历史记录
+- 方便追溯和排查问题
+
+## 运行示例
 
 ```
+==================================================
+Anki Card Generator
+==================================================
 
-#### 2. 处理逻辑 (Controller)
+[1/5] Scanning input directory...
+Found 1 file(s):
+  - test.txt
 
-1. **扫描:** 程序启动，扫描 `/input` 文件夹下所有 `.txt` 文件。
-2. **读取:** 逐行读取单词。
-* `strip()`: 去除首尾空格。
-* `lower()`: 转为小写 (确保 DeepSeek 识别准确，但在生成卡片时，例句中的单词可以保留首字母大写等语态)。
-* **去重:** 如果今天扔进去的两个文件有重复词，或者和本次运行已处理的词重复，跳过。
+[2/5] Collecting words...
+Found 3 unique word(s)
 
+[3/5] Generating card data via DeepSeek API...
+  Processing [1/3]: combine... OK
+  Processing [2/3]: elaborate... OK
+  Processing [3/3]: demonstrate... OK
 
-3. **请求:** 带着单词去请求 DeepSeek API。
-4. **保存:** 分别追加写入到 `/output/learning_import.csv` 和 `/output/practice_import.csv`。
-5. **归档:** 将处理完的 txt 文件移动到 `/processed`，建议重命名为 `原始文件名_processed_时间戳.txt`。
+[4/5] Writing CSV files...
+  Learning cards: Anki_Auto_Builder/output/learning_import.csv
+  Practice cards: Anki_Auto_Builder/output/practice_import.csv
 
----
+[5/5] Archiving processed files...
+  Archived: test_20240115_143022.txt
 
-### 二、 DeepSeek API 交互设计 (JSON Schema)
+==================================================
+Summary
+==================================================
+Total words: 3
+Successful: 3
+Failed: 0
 
-为了满足你的 **Type A + Type B (3种模式)**，我们需要 AI 返回一个非常详细的 JSON 对象。
-
-**System Prompt 设定：**
-
-> 你是一个专业的 Anki 卡片生成助手。请针对用户提供的单词，生成用于语言学习的 JSON 数据。
-> 如果单词没有明显的语音同化现象（Assimilation），该字段请填“无”。
-
-**User Prompt 模板：**
-
-> 单词：{target_word}
-> 请返回如下 JSON 格式：
-> ```json
-> {
->   "word": "原词",
->   "phonetic": "音标 (英/美)",
->   "meaning": "中文简明释义",
->   "learning_data": {
->     "source_code": "词根词缀分析",
->     "assimilation": "语音同化规则 (若无则填'无')",
->     "logic": "记忆逻辑链",
->     "note": "扩展备注/词源",
->     "example": "例句 (英文)",
->     "example_cn": "例句 (中文翻译)"
->   },
->   "practice_data": {
->     "cloze": {
->       "sentence": "生成一个完形填空句子，将目标词替换为 {{c1::目标词}}，确保语境不同于学习卡例句",
->       "hint": "中文提示"
->     },
->     "spelling": {
->       "definition": "用于拼写检查的英文释义或中文释义",
->       "sentence_front": "用于提示的句子，目标词用 _____ 代替"
->     },
->     "scenario": {
->       "context": "描述一个微小的具体场景（中文），诱导用户用出这个词",
->       "question": "问题引导 (例如：你会用哪个动词来描述这个动作？)"
->     }
->   }
-> }
-> 
-> ```
-> 
-> 
-
----
-
-### 三、 CSV 与 Anki 卡片模型设计
-
-这是最关键的部分。为了实现导入，我们需要定义两个 CSV 文件的表头。
-
-#### 1. 学习用 CSV (`learning_import.csv`)
-
-**对应 Anki 模板：** `English_Deep_Learning` (新建一个模板)
-**字段 (Columns):**
-
-1. **Word** (主键)
-2. **Phonetic**
-3. **Meaning**
-4. **SourceCode**
-5. **Assimilation**
-6. **Logic**
-7. **Note**
-8. **Example_En**
-9. **Example_Cn**
-
-#### 2. 练习用 CSV (`practice_import.csv`)
-
-**策略：** 这里我们创建一个 **“多合一”的笔记类型 (Note Type)**，命名为 `English_Practice_Master`。
-**原理：** 你只需要导入一行数据，Anki 会根据这行数据，自动生成 3 张不同的卡片（完形卡、拼写卡、场景卡）。
-
-**字段 (Columns):**
-
-1. **Word** (答案)
-2. **Meaning** (作为提示)
-3. **Cloze_Text** (API返回的 `practice_data.cloze.sentence`)
-4. **Cloze_Hint** (API返回的 `practice_data.cloze.hint`)
-5. **Spell_Def** (API返回的 `practice_data.spelling.definition`)
-6. **Scenario_Context** (API返回的 `practice_data.scenario.context`)
-7. **Scenario_Question** (API返回的 `practice_data.scenario.question`)
-
----
-
-### 四、 Anki 内部卡片呈现 (预览)
-
-在导入 `practice_import.csv` 后，Anki 会基于一行数据生成以下三张卡片：
-
-#### **卡片 1：完形填空 (Cloze)**
-
-* **正面:**
-* The plan was {{c1::combined}} with regular exercise.
-* *提示按钮:* 联合
-
-
-* **背面:**
-* The plan was **combined** with regular exercise.
-* (附加: Meaning)
-
-
-
-#### **卡片 2：拼写检查 (Spelling)**
-
-* **正面:**
-* **Definition:** (使)联合
-* **Context:** A good diet _____ with regular exercise is key.
-* **Input Box:** [ 用户输入框 ] (使用 Anki 的 `{{type:Word}}` 功能)
-
-
-* **背面:**
-* **Word:** combine
-* **Check:** (显示你输入的对错比对)
-
-
-
-#### **卡片 3：微场景 (Micro-Scenario)**
-
-* **正面:**
-* **场景:** 汤姆手里有两种不同颜色的粘土，他把它们捏在了一起，变成了一个大的双色球。
-* **提问:** 描述“捏在一起/结合”这个动作的动词原形是？
-* **Input Box:** [ 用户输入框 ] (同样使用 `{{type:Word}}`)
-
-
-* **背面:**
-* **Answer:** combine
-* **Check:** (比对结果)
-
----
-
-### 五、 总结确认
-
-这个设计满足了你的所有需求：
-
-1. **输入自动化：** 只要把 txt 扔进文件夹，程序自动处理并移走，不修改原文件。
-2. **内容深度：** 包含词源、逻辑，并处理了“无同化”的情况。
-3. **练习多样性：** 实现了**完形、拼写、场景**三种训练模式。
-4. **输出结构：** 两个独立的 CSV，分别用于“学习”和“练习”两个不同的 Deck 或用途。
-
+Done!
+```
